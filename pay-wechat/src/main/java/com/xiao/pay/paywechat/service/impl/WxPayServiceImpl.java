@@ -1,12 +1,16 @@
 package com.xiao.pay.paywechat.service.impl;
 
 import com.google.gson.Gson;
+import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
 import com.xiao.pay.paywechat.config.WxPayConfig;
+import com.xiao.pay.paywechat.dao.PaymentInfoMapper;
 import com.xiao.pay.paywechat.dao.ProductMapper;
 import com.xiao.pay.paywechat.entity.OrderInfo;
+import com.xiao.pay.paywechat.enums.OrderStatus;
 import com.xiao.pay.paywechat.enums.wxpay.WxApiType;
 import com.xiao.pay.paywechat.enums.wxpay.WxNotifyType;
 import com.xiao.pay.paywechat.service.OrderInfoService;
+import com.xiao.pay.paywechat.service.PaymentInfoService;
 import com.xiao.pay.paywechat.service.WxPayService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
@@ -17,9 +21,12 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,12 +48,19 @@ public class WxPayServiceImpl implements WxPayService {
 
     private final CloseableHttpClient wxPayClient;
 
+    private final PaymentInfoService paymentInfoService;
 
-    public WxPayServiceImpl(ProductMapper productMapper, OrderInfoService orderInfoService, WxPayConfig wxPayConfig, CloseableHttpClient wxPayClient) {
+
+    public WxPayServiceImpl(ProductMapper productMapper,
+                            OrderInfoService orderInfoService,
+                            WxPayConfig wxPayConfig,
+                            CloseableHttpClient wxPayClient,
+                            PaymentInfoService paymentInfoService) {
         this.productMapper = productMapper;
         this.orderInfoService = orderInfoService;
         this.wxPayConfig = wxPayConfig;
         this.wxPayClient = wxPayClient;
+        this.paymentInfoService = paymentInfoService;
     }
 
     @Override
@@ -143,5 +157,53 @@ public class WxPayServiceImpl implements WxPayService {
         String body = gson.toJson(paramsMap);
         log.info(">>>>>>>>>>> {} >> body: {}", "请求Body生成完成", body);
         return body;
+    }
+
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void processOrder(HashMap<String, Object> bodyMap) {
+        log.info("{} ", "处理订单信息");
+        Gson gson = new Gson();
+        //解密信息
+        String orderDetails = decryptFromResource(bodyMap);
+        HashMap<String, Object> orderMap = gson.fromJson(orderDetails, HashMap.class);
+        //获取订单号
+        String outTradeNo = (String) orderMap.get("out_trade_no");
+        log.info("系统订单号 >>> {} ", outTradeNo);
+        //处理重复通知
+        String state = orderInfoService.getStateByOrderNo(outTradeNo);
+        if (state.equals(OrderStatus.NOTPAY.getType())) {
+            //更新订单状态
+            orderInfoService.updateStatusByOrderNo(outTradeNo, OrderStatus.SUCCESS);
+            //记录支付日志
+            paymentInfoService.createPaymentInfo(orderDetails);
+            return;
+        }
+        log.info(">>> {} ", "订单处理重复提交");
+
+    }
+
+    private String decryptFromResource(HashMap<String, Object> bodyMap) {
+        log.info(">>> {} ", "密文解密");
+        Gson gson = new Gson();
+        //通知数据
+        Map<String, String> resource = (Map<String, String>) bodyMap.get("resource");
+        //数据密文
+        String ciphertext = resource.get("ciphertext");
+        //随机串
+        String nonce = resource.get("nonce");
+        //附加数据
+        String associatedData = resource.get("associated_data");
+        AesUtil aesUtil = new AesUtil(wxPayConfig.getApiV3Key().getBytes(StandardCharsets.UTF_8));
+        String orderDetails;
+        try {
+            orderDetails = aesUtil.decryptToString(associatedData.getBytes(StandardCharsets.UTF_8),
+                    nonce.getBytes(StandardCharsets.UTF_8), ciphertext);
+        } catch (GeneralSecurityException e) {
+            log.error(">>> {}", "密文解析失败");
+            throw new RuntimeException(e);
+        }
+        return orderDetails;
     }
 }

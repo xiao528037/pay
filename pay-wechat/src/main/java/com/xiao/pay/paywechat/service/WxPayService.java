@@ -1,6 +1,7 @@
 package com.xiao.pay.paywechat.service;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -19,4 +20,11 @@ public interface WxPayService {
      * @throws IOException
      */
     public Map nativePay(Long productId);
+
+    /**
+     * 解密订单数据和更新订单状态
+     *
+     * @param bodyMap
+     */
+    void processOrder(HashMap<String, Object> bodyMap);
 }

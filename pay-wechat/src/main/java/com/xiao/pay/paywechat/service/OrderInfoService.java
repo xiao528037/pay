@@ -3,7 +3,10 @@ package com.xiao.pay.paywechat.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xiao.pay.paywechat.dao.ProductMapper;
 import com.xiao.pay.paywechat.entity.OrderInfo;
+import com.xiao.pay.paywechat.enums.OrderStatus;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
 
 /**
  * @author aloneMan
@@ -45,7 +48,16 @@ public interface OrderInfoService extends IService<OrderInfo> {
     void orderCodeUrl(String codeUrl, String orderNo);
 
     /**
-     * 更新订单支付状态
+     * 更新订单状态
+     * @param orderNo 订单号
+     * @param success 订单状态
      */
-    void updateOrderInfoPayStatus();
+    void updateStatusByOrderNo(String orderNo, OrderStatus success);
+
+    /**
+     * 获取订单状态
+     * @param outTradeNo 订单编号
+     * @return 状态
+     */
+    String getStateByOrderNo(String outTradeNo);
 }

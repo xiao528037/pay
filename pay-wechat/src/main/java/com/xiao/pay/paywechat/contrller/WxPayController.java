@@ -2,6 +2,7 @@ package com.xiao.pay.paywechat.contrller;
 
 import com.google.gson.Gson;
 import com.wechat.pay.contrib.apache.httpclient.auth.Verifier;
+import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
 import com.xiao.pay.paywechat.service.OrderInfoService;
 import com.xiao.pay.paywechat.service.WxPayService;
 import com.xiao.pay.paywechat.util.HttpUtils;
@@ -18,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author aloneMan
@@ -36,13 +38,11 @@ public class WxPayController {
 
     private final WxPayService wxPayService;
 
-    private final OrderInfoService orderInfoService;
 
     private final Verifier verifier;
 
     public WxPayController(WxPayService wxPayService, OrderInfoService orderInfoService, Verifier verifier) {
         this.wxPayService = wxPayService;
-        this.orderInfoService = orderInfoService;
         this.verifier = verifier;
     }
 
@@ -62,11 +62,12 @@ public class WxPayController {
         //处理通知信息参数
         String requestBody = HttpUtils.readData(request);
 
-        HashMap<String, String> bodyMap = gson.fromJson(requestBody, HashMap.class);
+        HashMap<String, Object> bodyMap = gson.fromJson(requestBody, HashMap.class);
         String id = (String) bodyMap.get("id");
         log.info("支付通知的ID >>> {} ", id);
         log.info("支付通知信息 >>> {} ", bodyMap);
 
+        //@TODO 验签
         WechatPay2ValidatorForRequest validator = new WechatPay2ValidatorForRequest(verifier, requestBody, id);
         boolean validate = validator.validate(request);
         if (!validate) {
@@ -78,9 +79,8 @@ public class WxPayController {
             result.put("code", 200);
             result.put("message", "success");
         }
-
-        orderInfoService.updateOrderInfoPayStatus();
-
+        //@TODO 更新订单状态和保存支付日志
+        wxPayService.processOrder(bodyMap);
         return gson.toJson(result);
     }
 }

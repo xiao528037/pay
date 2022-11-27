@@ -5,6 +5,7 @@ import java.util.Date;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -17,6 +18,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @TableName("t_payment_info")
 public class PaymentInfo implements Serializable {
     /**
@@ -52,7 +54,7 @@ public class PaymentInfo implements Serializable {
     /**
      * 支付金额(分)
      */
-    private Integer payerTotal;
+    private Double payerTotal;
 
     /**
      * 通知参数

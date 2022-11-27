@@ -12,4 +12,10 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface PaymentInfoMapper extends BaseMapper<PaymentInfo> {
+
+    /**
+     * 记录订单日志
+     * @param plainText 订单信息
+     */
+    void createPaymentInfo(String plainText);
 }

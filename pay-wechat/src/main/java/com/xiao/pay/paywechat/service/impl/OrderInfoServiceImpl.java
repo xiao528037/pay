@@ -1,6 +1,9 @@
 package com.xiao.pay.paywechat.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.gson.Gson;
+import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
+import com.xiao.pay.paywechat.config.WxPayConfig;
 import com.xiao.pay.paywechat.dao.OrderInfoMapper;
 import com.xiao.pay.paywechat.dao.ProductMapper;
 import com.xiao.pay.paywechat.entity.OrderInfo;
@@ -11,6 +14,12 @@ import com.xiao.pay.paywechat.util.OrderNoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author aloneMan
@@ -25,9 +34,12 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     private final ProductMapper productMapper;
     private final OrderInfoMapper orderInfoMapper;
 
-    public OrderInfoServiceImpl(ProductMapper productMapper, OrderInfoMapper orderInfoMapper) {
+    private final WxPayConfig wxPayConfig;
+
+    public OrderInfoServiceImpl(ProductMapper productMapper, OrderInfoMapper orderInfoMapper, WxPayConfig wxPayConfig) {
         this.productMapper = productMapper;
         this.orderInfoMapper = orderInfoMapper;
+        this.wxPayConfig = wxPayConfig;
     }
 
     @Override
@@ -65,7 +77,13 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     }
 
     @Override
-    public void updateOrderInfoPayStatus() {
-        log.info("{} ", "更新订单状态");
+    public void updateStatusByOrderNo(String orderNo, OrderStatus success) {
+        int i = orderInfoMapper.updateStatusByOrderNo(orderNo, success.getType());
+        Assert.isTrue(i > 0, "更新订单状态失败");
+    }
+
+    @Override
+    public String getStateByOrderNo(String outTradeNo) {
+        return orderInfoMapper.getStateByOrderNo(outTradeNo);
     }
 }
