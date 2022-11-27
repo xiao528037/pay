@@ -8,6 +8,7 @@ import com.xiao.pay.paywechat.entity.Product;
 import com.xiao.pay.paywechat.enums.OrderStatus;
 import com.xiao.pay.paywechat.service.OrderInfoService;
 import com.xiao.pay.paywechat.util.OrderNoUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -18,6 +19,7 @@ import org.springframework.util.Assert;
  * @description
  */
 @Service("orderInfoService")
+@Slf4j(topic = "OrderInfoServiceImpl")
 public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> implements OrderInfoService {
 
     private final ProductMapper productMapper;
@@ -60,5 +62,10 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     public void orderCodeUrl(String codeUrl, String orderNo) {
         int i = orderInfoMapper.saveCodeUrlByOrderNo(codeUrl, orderNo);
         Assert.isTrue(i > 0, "更新订单支付二维码信息失败");
+    }
+
+    @Override
+    public void updateOrderInfoPayStatus() {
+        log.info("{} ", "更新订单状态");
     }
 }

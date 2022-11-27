@@ -3,6 +3,7 @@ package com.xiao.pay.paywechat.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xiao.pay.paywechat.dao.ProductMapper;
 import com.xiao.pay.paywechat.entity.OrderInfo;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author aloneMan
@@ -19,7 +20,8 @@ public interface OrderInfoService extends IService<OrderInfo> {
      *         商品ID
      * @return 返回订单信息
      */
-    public OrderInfo createOrder(Long productId);
+    @Transactional(rollbackFor = Exception.class)
+    OrderInfo createOrder(Long productId);
 
     /**
      * 查询商品是否存在未支付的订单信息
@@ -28,6 +30,7 @@ public interface OrderInfoService extends IService<OrderInfo> {
      *         商品ID
      * @return 订单信息
      */
+    @Transactional(readOnly = true)
     OrderInfo getNoPayOrderByproductId(Long productId);
 
     /**
@@ -38,5 +41,11 @@ public interface OrderInfoService extends IService<OrderInfo> {
      * @param orderNo
      *         订单编号
      */
+    @Transactional(rollbackFor = Exception.class)
     void orderCodeUrl(String codeUrl, String orderNo);
+
+    /**
+     * 更新订单支付状态
+     */
+    void updateOrderInfoPayStatus();
 }

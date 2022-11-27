@@ -15,8 +15,8 @@ import java.io.IOException;
  * @createTime 2022-11-26 12:26:20
  * @description
  */
-@WebFilter(urlPatterns = "/*", filterName = "corsFilter")
-@Component
+//@WebFilter(urlPatterns = "/*", filterName = "corsFilter")
+//@Component
 public class CorsFilter implements Filter {
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {

@@ -129,8 +129,9 @@ public class WxPayServiceImpl implements WxPayService {
         //商户系统内部订单号
         paramsMap.put("out_trade_no", orderInfo.getOrderNo());
         //支付接口通知接口
-        paramsMap.put("notify_url", wxPayConfig.getNotifyDomain().concat(WxNotifyType.NATIVE_NOTIFY.getType()));
-        Map amountMap = new HashMap();
+        String notifyUrl = wxPayConfig.getNotifyDomain().concat(WxNotifyType.NATIVE_NOTIFY.getType());
+        paramsMap.put("notify_url", notifyUrl);
+        Map amountMap = new HashMap(2);
         //金额 单位：分
         amountMap.put("total", orderInfo.getTotalFee());
         //币种

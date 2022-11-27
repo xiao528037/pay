@@ -148,7 +148,7 @@ public class WxPayConfig {
     @Bean
     public CloseableHttpClient wxPayClient() {
         WechatPayHttpClientBuilder builder = WechatPayHttpClientBuilder.create()
-                .withMerchant(this.mchid, this.mchSerialNo, getPrivateKey(this.privateKeyPath))
+                .withMerchant(mchid, mchSerialNo, getPrivateKey(privateKeyPath))
                 .withWechatPay(Arrays.asList(verifier().getValidCertificate()));
         // ... 接下来，你仍然可以通过builder设置各种参数，来配置你的HttpClient
 

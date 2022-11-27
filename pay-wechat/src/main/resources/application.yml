@@ -29,4 +29,6 @@ mybatis-plus:
 
 swagger:
   enabled: true
-
+logging:
+  level:
+    root: info
