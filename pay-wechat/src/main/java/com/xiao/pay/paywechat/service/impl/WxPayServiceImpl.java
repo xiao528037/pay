@@ -1,7 +1,10 @@
 package com.xiao.pay.paywechat.service.impl;
 
 import com.google.gson.Gson;
+import com.wechat.pay.contrib.apache.httpclient.WechatPayHttpClientBuilder;
+import com.wechat.pay.contrib.apache.httpclient.auth.Verifier;
 import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
+import com.wechat.pay.contrib.apache.httpclient.util.PemUtil;
 import com.xiao.pay.paywechat.config.WxPayConfig;
 import com.xiao.pay.paywechat.dao.ProductMapper;
 import com.xiao.pay.paywechat.entity.OrderInfo;
@@ -53,23 +56,30 @@ public class WxPayServiceImpl implements WxPayService {
 
     private final CloseableHttpClient wxPayClient;
 
+    private final CloseableHttpClient wxPayDownloadClient;
+
     private final PaymentInfoService paymentInfoService;
 
     private final RefundsInfoService refundsInfoService;
+
+    private final Verifier verifier;
     private final ReentrantLock lock = new ReentrantLock();
 
     public WxPayServiceImpl(ProductMapper productMapper,
                             OrderInfoService orderInfoService,
                             WxPayConfig wxPayConfig,
                             CloseableHttpClient wxPayClient,
-                            PaymentInfoService paymentInfoService,
-                            RefundsInfoService refundsInfoService) {
+                            CloseableHttpClient wxPayDownloadClient, PaymentInfoService paymentInfoService,
+                            RefundsInfoService refundsInfoService,
+                            Verifier verifier) {
         this.productMapper = productMapper;
         this.orderInfoService = orderInfoService;
         this.wxPayConfig = wxPayConfig;
         this.wxPayClient = wxPayClient;
+        this.wxPayDownloadClient = wxPayDownloadClient;
         this.paymentInfoService = paymentInfoService;
         this.refundsInfoService = refundsInfoService;
+        this.verifier = verifier;
     }
 
     @Override
@@ -423,5 +433,117 @@ public class WxPayServiceImpl implements WxPayService {
         }
         Gson gson = new Gson();
         return gson.fromJson(bodyAsString, HashMap.class);
+    }
+
+    @Override
+    public void processRefund(HashMap<String, Object> bodyMap) {
+        log.info("{} ", "退款单处理");
+        String plainText = decryptFromResource(bodyMap);
+        Gson gson = new Gson();
+        HashMap plainTextMap = gson.fromJson(plainText, HashMap.class);
+        String orderNo = (String) plainTextMap.get("out_trade_no");
+        if (lock.tryLock()) {
+            String state = orderInfoService.getStateByOrderNo(orderNo);
+            if (!OrderStatus.REFUND_PROCESSING.getType().equals(state)) {
+                return;
+            }
+            //更新订单状态
+            orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.REFUND_SUCCESS);
+            //更新退款单
+            refundsInfoService.updateRefund(plainText);
+        }
+    }
+
+    /**
+     * 申请账单
+     *
+     * @param billDate
+     * @param type
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public String queryBill(String billDate, String type) throws Exception {
+        log.warn("申请账单接口调用 {}", billDate);
+
+        String url = "";
+        if ("tradebill".equals(type)) {
+            url = WxApiType.TRADE_BILLS.getType();
+        } else if ("fundflowbill".equals(type)) {
+            url = WxApiType.FUND_FLOW_BILLS.getType();
+        } else {
+            throw new RuntimeException("不支持的账单类型");
+        }
+
+        url = wxPayConfig.getDomian()
+                .concat(url)
+                .concat("?bill_date=")
+                .concat(billDate)
+                .concat("&bill_type=")
+                .concat("ALL");
+
+        //创建远程Get 请求对象
+        HttpGet httpGet = new HttpGet(url);
+        httpGet.addHeader("Accept", "application/json");
+
+        //使用wxPayClient发送请求得到响应
+        CloseableHttpResponse response = wxPayClient.execute(httpGet);
+
+        try {
+            String bodyAsString = EntityUtils.toString(response.getEntity());
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == 200) {
+                log.info("成功, 申请账单返回结果 = " + bodyAsString);
+            } else if (statusCode == 204) {
+                log.info("成功");
+            } else {
+                throw new RuntimeException("申请账单异常, 响应码 = " + statusCode + ", 申请账单返回结果 = " + bodyAsString);
+            }
+
+            //获取账单下载地址
+            Gson gson = new Gson();
+            Map<String, String> resultMap = gson.fromJson(bodyAsString, HashMap.class);
+            return resultMap.get("download_url");
+
+        } finally {
+            response.close();
+        }
+    }
+
+    /**
+     * 下载账单
+     *
+     * @param billDate
+     * @param type
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public String downloadBill(String billDate, String type) throws Exception {
+        log.warn("下载账单接口调用 {}, {}", billDate, type);
+
+        //获取账单url地址
+        String downloadUrl = this.queryBill(billDate, type);
+        log.info("{} ", downloadUrl);
+        //创建远程Get 请求对象
+        HttpGet httpGet = new HttpGet(downloadUrl);
+        httpGet.addHeader("Accept", "application/json");
+
+        //使用wxPayClient发送请求得到响应
+        CloseableHttpResponse response = wxPayDownloadClient.execute(httpGet);
+        try {
+            String bodyAsString = EntityUtils.toString(response.getEntity());
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == 200) {
+                log.info("成功, 下载账单返回结果 = " + bodyAsString);
+            } else if (statusCode == 204) {
+                log.info("成功");
+            } else {
+                throw new RuntimeException("下载账单异常, 响应码 = " + statusCode + ", 下载账单返回结果 = " + bodyAsString);
+            }
+            return bodyAsString;
+        } finally {
+            response.close();
+        }
     }
 }

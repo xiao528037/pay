@@ -57,7 +57,7 @@ public class WxPayController {
     }
 
     @PostMapping("/native/notify")
-    @ApiOperation("接收微信通知")
+    @ApiOperation("接收微信支付通知")
     public String nativeNotify(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Gson gson = new Gson();
         Map result = new HashMap(2);
@@ -84,6 +84,37 @@ public class WxPayController {
         }
         //@TODO 更新订单状态和保存支付日志
         wxPayService.processOrder(bodyMap);
+        return gson.toJson(result);
+    }
+
+    @PostMapping("/refunds/notify")
+    @ApiOperation("接收微信退款通知")
+    public String nativeRefund(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Gson gson = new Gson();
+        Map result = new HashMap(2);
+
+        //处理通知信息参数
+        String requestBody = HttpUtils.readData(request);
+
+        HashMap<String, Object> bodyMap = gson.fromJson(requestBody, HashMap.class);
+        String id = (String) bodyMap.get("id");
+        log.info("支付通知的ID >>> {} ", id);
+        log.info("支付通知信息 >>> {} ", bodyMap);
+
+        //@TODO 验签
+        WechatPay2ValidatorForRequest validator = new WechatPay2ValidatorForRequest(verifier, requestBody, id);
+        boolean validate = validator.validate(request);
+        if (!validate) {
+            log.error("签名验证失败");
+            result.put("code", 500);
+            result.put("message", "fail");
+        } else {
+            log.info("{} ", "签名认证成功");
+            result.put("code", 200);
+            result.put("message", "success");
+        }
+        //@TODO 更新订单状态和保存支付日志
+        wxPayService.processRefund(bodyMap);
         return gson.toJson(result);
     }
 
@@ -124,5 +155,28 @@ public class WxPayController {
     public Result refund(@PathVariable("orderNo") String orderNo, @PathVariable("reason") String reason) throws IOException {
         wxPayService.refund(orderNo, reason);
         return Result.success();
+    }
+
+    @ApiOperation("获取账单url：测试用")
+    @GetMapping("/querybill/{billDate}/{type}")
+    public Result queryTradeBill(
+            @PathVariable String billDate,
+            @PathVariable String type) throws Exception {
+        log.info("获取账单url");
+        String downloadUrl = wxPayService.queryBill(billDate, type);
+        HashMap<String, String> result = new HashMap<>(1);
+        result.put("downloadUrl", downloadUrl);
+        return Result.success(result);
+    }
+
+    @ApiOperation("下载账单")
+    @GetMapping("/downloadbill/{billDate}/{type}")
+    public Result downloadBill(
+            @PathVariable String billDate,
+            @PathVariable String type) throws Exception {
+
+        log.info("下载账单");
+        String result = wxPayService.downloadBill(billDate, type);
+        return Result.success(result);
     }
 }

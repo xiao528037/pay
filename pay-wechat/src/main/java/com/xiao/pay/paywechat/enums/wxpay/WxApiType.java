@@ -20,7 +20,7 @@ public enum WxApiType {
 	/**
 	 * 关闭订单
 	 */
-	CLOSE_ORDER_BY_NO("/v3/pay/transactions/out-trade-no/%s/close"),
+	CLOSE_ORDER_BY_NO("/v3/pay/transactions/out-trade-no/%/close"),
 
 	/**
 	 * 申请退款

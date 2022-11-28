@@ -85,7 +85,7 @@ public class WxPayConfig {
     /**
      * 获取商户私钥
      *
-     * @param privateKeyPath
+     * @param filename
      * @return 返回私钥
      */
     private PrivateKey getPrivateKey(String filename) {
@@ -150,6 +150,24 @@ public class WxPayConfig {
         WechatPayHttpClientBuilder builder = WechatPayHttpClientBuilder.create()
                 .withMerchant(mchid, mchSerialNo, getPrivateKey(privateKeyPath))
                 .withWechatPay(Arrays.asList(verifier().getValidCertificate()));
+        // ... 接下来，你仍然可以通过builder设置各种参数，来配置你的HttpClient
+
+        // 通过WechatPayHttpClientBuilder构造的HttpClient，会自动的处理签名和验签
+        CloseableHttpClient httpClient = builder.build();
+        return httpClient;
+    }
+
+    /**
+     * 用于下载账单使用
+     *
+     * @return
+     */
+    @Bean
+    public CloseableHttpClient wxPayDownloadClient() {
+        WechatPayHttpClientBuilder builder = WechatPayHttpClientBuilder.create()
+                .withMerchant(mchid, mchSerialNo, getPrivateKey(privateKeyPath))
+                .withWechatPay(Arrays.asList(verifier().getValidCertificate()))
+                .withValidator((response -> true));
         // ... 接下来，你仍然可以通过builder设置各种参数，来配置你的HttpClient
 
         // 通过WechatPayHttpClientBuilder构造的HttpClient，会自动的处理签名和验签

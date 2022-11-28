@@ -49,9 +49,9 @@ public class WxPayTask {
         }
     }
 
-    /**
+/*    *//**
      * 每隔三十秒查询一次，超过五分钟未退款的订单
-     */
+     *//*
     @Scheduled(cron = "0/30 * * * * ?")
     public void wxPayRefund() {
         List<RefundInfo> noRefundOrderByDuration = refundsInfoService.getNoRefundOrderByDuration(5);
@@ -59,5 +59,5 @@ public class WxPayTask {
             log.info("<<<<<< {} ",refundInfo);
             //检查支付订单状态
         }
-    }
+    }*/
 }

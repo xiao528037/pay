@@ -77,4 +77,16 @@ public interface WxPayService {
      * @return 退款信息
      */
     Map queryRefund(String refundNo) throws IOException;
+
+    /**
+     * 微信退款通知
+     *
+     * @param bodyMap
+     *         微信平台发送过来的信息
+     */
+    void processRefund(HashMap<String, Object> bodyMap);
+
+    String queryBill(String billDate, String type) throws Exception;
+
+    String downloadBill(String billDate, String type) throws Exception;
 }
