@@ -54,7 +54,7 @@ public class PaymentInfo implements Serializable {
     /**
      * 支付金额(分)
      */
-    private Double payerTotal;
+    private Integer payerTotal;
 
     /**
      * 通知参数

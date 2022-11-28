@@ -1,5 +1,6 @@
 package com.xiao.pay.paywechat.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.Gson;
 import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
@@ -17,7 +18,10 @@ import org.springframework.util.Assert;
 
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -85,5 +89,14 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     @Override
     public String getStateByOrderNo(String outTradeNo) {
         return orderInfoMapper.getStateByOrderNo(outTradeNo);
+    }
+
+    @Override
+    public List<OrderInfo> getNoPayOrderByDuration(int minutes) {
+        Instant minus = Instant.now().minus(Duration.ofMinutes(minutes));
+        QueryWrapper<OrderInfo> query = new QueryWrapper<>();
+        query.lambda().eq(OrderInfo::getOrderStatus, OrderStatus.NOTPAY.getType()).le(OrderInfo::getCreateTime, minus);
+        List<OrderInfo> orderInfos = orderInfoMapper.selectList(query);
+        return orderInfos;
     }
 }

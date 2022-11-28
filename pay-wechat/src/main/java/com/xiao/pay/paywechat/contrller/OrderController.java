@@ -2,15 +2,14 @@ package com.xiao.pay.paywechat.contrller;
 
 import com.xiao.pay.paywechat.config.WxPayConfig;
 import com.xiao.pay.paywechat.entity.OrderInfo;
+import com.xiao.pay.paywechat.enums.OrderStatus;
 import com.xiao.pay.paywechat.service.OrderInfoService;
 import com.xiao.pay.paywechat.vo.Result;
+import com.xiao.pay.paywechat.vo.ResultCode;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -43,4 +42,26 @@ public class OrderController {
         log.info("{} ", wxPayConfig);
         return Result.success(list);
     }
+
+    /**
+     * 获取订单状态
+     *
+     * @param oderNo
+     *         订单标号
+     * @return 订单状态
+     */
+    @GetMapping("/queryOderStatus/{orderNo}")
+    @ApiOperation("获取订单状态")
+    public Result getOrderStatus(@PathVariable("orderNo") String oderNo) {
+        String orderState = orderInfoService.getStateByOrderNo(oderNo);
+        if (orderState == null) {
+            return Result.fail();
+        }
+        if (orderState.equals(OrderStatus.SUCCESS.getType())) {
+            return Result.success("支付成功");
+        }
+        return Result.instance(ResultCode.ORDER_STATUS, "订单正在支付");
+    }
+
+
 }

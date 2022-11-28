@@ -7,6 +7,7 @@ import com.xiao.pay.paywechat.enums.OrderStatus;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * @author aloneMan
@@ -49,15 +50,28 @@ public interface OrderInfoService extends IService<OrderInfo> {
 
     /**
      * 更新订单状态
-     * @param orderNo 订单号
-     * @param success 订单状态
+     *
+     * @param orderNo
+     *         订单号
+     * @param success
+     *         订单状态
      */
     void updateStatusByOrderNo(String orderNo, OrderStatus success);
 
     /**
      * 获取订单状态
-     * @param outTradeNo 订单编号
+     *
+     * @param outTradeNo
+     *         订单编号
      * @return 状态
      */
     String getStateByOrderNo(String outTradeNo);
+
+
+    /**
+     * 查询超过指定时间未支付的订单
+     * @param minutes 时间分钟
+     * @return 未支付集合
+     */
+    List<OrderInfo> getNoPayOrderByDuration(int minutes);
 }

@@ -3,6 +3,8 @@ package com.xiao.pay.paywechat.contrller;
 import com.google.gson.Gson;
 import com.wechat.pay.contrib.apache.httpclient.auth.Verifier;
 import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
+import com.xiao.pay.paywechat.entity.OrderInfo;
+import com.xiao.pay.paywechat.entity.RefundInfo;
 import com.xiao.pay.paywechat.service.OrderInfoService;
 import com.xiao.pay.paywechat.service.WxPayService;
 import com.xiao.pay.paywechat.util.HttpUtils;
@@ -49,12 +51,13 @@ public class WxPayController {
 
     @PostMapping("/native/{productId}")
     @ApiOperation("订单生成")
-    public Result nativePay(@PathVariable("productId") Long productId) {
+    public Result nativePay(@PathVariable("productId") Long productId) throws IOException {
         Map map = wxPayService.nativePay(productId);
         return Result.success(map);
     }
 
     @PostMapping("/native/notify")
+    @ApiOperation("接收微信通知")
     public String nativeNotify(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Gson gson = new Gson();
         Map result = new HashMap(2);
@@ -82,5 +85,44 @@ public class WxPayController {
         //@TODO 更新订单状态和保存支付日志
         wxPayService.processOrder(bodyMap);
         return gson.toJson(result);
+    }
+
+    /**
+     * 取消订单
+     *
+     * @param orderNo
+     *         订单标号
+     * @return 返回取消状态
+     * @throws IOException
+     */
+    @PostMapping("/cancel/{orderNo}")
+    @ApiOperation("订单取消")
+    public Result cancelOrder(@PathVariable("orderNo") String orderNo) throws IOException {
+        wxPayService.cancelOrder(orderNo);
+        return Result.success();
+    }
+
+    @GetMapping("/queryOrderInfo/{orderNo}")
+    @ApiOperation("获取订单信息")
+    public Result getOrderInfo(@PathVariable("orderNo") String orderNo) {
+        String body = wxPayService.queryOrder(orderNo);
+        Gson gson = new Gson();
+        HashMap result = gson.fromJson(body, HashMap.class);
+        return Result.success(result);
+    }
+
+    @ApiOperation("查询退款")
+    @GetMapping("/query-refund/{refundNo}")
+    public Result<Map> queryRefund(@PathVariable("refundNo") String refundNo) throws IOException {
+        log.info("{} ", "查询退款");
+        Map result = wxPayService.queryRefund(refundNo);
+        return Result.success(result);
+    }
+
+    @PostMapping("/refund/{orderNo}/{reason}")
+    @ApiOperation("退款")
+    public Result refund(@PathVariable("orderNo") String orderNo, @PathVariable("reason") String reason) throws IOException {
+        wxPayService.refund(orderNo, reason);
+        return Result.success();
     }
 }

@@ -8,6 +8,7 @@ import com.xiao.pay.paywechat.dao.PaymentInfoMapper;
 import com.xiao.pay.paywechat.entity.PaymentInfo;
 import com.xiao.pay.paywechat.enums.PayType;
 import com.xiao.pay.paywechat.service.PaymentInfoService;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,7 +56,7 @@ public class PaymentInfoServiceImpl extends ServiceImpl<PaymentInfoMapper, Payme
                 .transactionId(transactionId)
                 .tradeType(tradeType)
                 .tradeState(tradeState)
-                .payerTotal(payerTotal)
+                .payerTotal(payerTotal.intValue())
                 .content(plainText)
                 .build();
         int insert = paymentInfoMapper.insert(paymentInfo);
