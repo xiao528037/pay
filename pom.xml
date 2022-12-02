@@ -29,6 +29,7 @@
         <mybatis-plus.version>3.5.2</mybatis-plus.version>
         <druid.version>1.2.14</druid.version>
         <wechatpay.version>0.4.8</wechatpay.version>
+        <alipay.version>4.34.52.ALL</alipay.version>
     </properties>
 
     <dependencyManagement>
@@ -69,6 +70,11 @@
                 <groupId>com.github.wechatpay-apiv3</groupId>
                 <artifactId>wechatpay-apache-httpclient</artifactId>
                 <version>${wechatpay.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alipay.sdk</groupId>
+                <artifactId>alipay-sdk-java</artifactId>
+                <version>${alipay.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>

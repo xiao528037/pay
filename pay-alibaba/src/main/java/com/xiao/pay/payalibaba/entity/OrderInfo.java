@@ -1,12 +1,12 @@
-package com.xiao.pay.paywechat.entity;
-
-import java.io.Serializable;
-import java.util.Date;
+package com.xiao.pay.payalibaba.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author aloneMan
@@ -63,7 +63,6 @@ public class OrderInfo implements Serializable {
      * 支付类型
      */
     private String paymentType;
-
     /**
      * 创建时间
      */

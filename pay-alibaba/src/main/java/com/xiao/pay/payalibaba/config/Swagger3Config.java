@@ -36,10 +36,10 @@ public class Swagger3Config {
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("支付")
+                .title("支付宝支付")
                 .contact(new Contact("xiao.com", "", "aaaa@qq.com"))
                 .version("v1.0")
-                .description("支付")
+                .description("支付宝支付")
                 .build();
     }
 }

@@ -1,0 +1,55 @@
+server:
+  port: 8001
+spring:
+  application:
+    name: alipay
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: xiaojiebin
+    url: jdbc:mysql://127.0.0.1:3306/payment_demo?useUnicode=true&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&connectionCollation=utf8mb4_general_ci&uerSSL=false
+  jackson:
+    default-property-inclusion: non_null
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+    lazy-loading-enabled: true
+    aggressive-lazy-loading: false
+    lazy-load-trigger-methods: ""
+    cache-enabled: true
+  configuration-properties:
+    helperDialect: mysql
+    offsetAsPageNum: true
+    rowBoundsWithCount: true
+    reasonable: true
+
+logging:
+  level:
+    root: info
+
+
+swagger:
+  enabled: true
+
+# 支付宝相关参数
+alipay:
+  # 应用ID,您的APPID，收款账号既是您的APPID对应支付宝账号
+  app-id: 2021000121692283
+  # 商户PID，卖家支付宝账号ID
+  seller-id: 2088621993877530
+  # 支付宝网关
+  gateway-url: https://openapi.alipaydev.com/gateway.do
+  # 账户密钥，PKCS8格式RSA2密钥
+  merchant-private-key: MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCb6agbCyTyy/VRJX0iAGUJG6ypkB/keNN4eiio3Q9dx2pvexbBp8pXA5nb4QSm9UEQruWDvulrBX9Pq5e172yF7uJszgK6NEbgpztajM7LwE217WQcvSIKB5OePwHrzKGnGLz1EGh0DnloEO3BY5EJAqZdDlQzpd80XYZM9/PgCk94RP7qZ8MMan6dzLjnvBdfhEzMqbNTLrDppwTbhkke96fFe3BcjaTji933S6aycqjR4B+owY4Ax7U6SnSTXdofvlQvQHpRO6dRm4DB5Vt9PVUsGqE8R6+v/KU2kNbPOSTEGAVS/Z+9oz8+zdL3Z4UILBn9NaiSRrPXVZMSrlidAgMBAAECggEAJUbPJ3AZrGcxRu50pY18mpngRUYtKd3tiY+DayQ3SU+lVfQS88gfK4Cz54s8JoLaxJdcTox1mF3fG3hGNHyC8N61ihgTNNvM2meBXFvwEWzv54BTgD+EBOvc0mf0GKF7QM08WEdNAfp38nahsawRgBr/FZ6YaSTOYeG+e2aJC1ZsMk0Nzc72DcgwzOlsw0A4D3FT+7nY3543fFXkbEu7OTy2gAVUavISF44BBscd5kj/9q1n81omNqTX9T7+FzreFUoQV76RDOAT+COM+Vc96gAw+ss65j31zY2GVEKRwo/bMOYj2OYkSkTBhILlApF5WB1AnCRLqeVLCBGvAf9sIQKBgQDJnFMsxbNXE0RR4nzAAN4S3w8M1AHD3kBipZ30tzJSFP+m7eNoIQBhScpmqkJyY4z97oIKUKYGCseJ3FkF/sujxcMMgLmpXKC+LHsZ6CzS1TGBQbaOevA/mCSqJ5QIp6ZiC0gJGKH2mv6JqWHNfFmubRoLw8Bnm44eQarZECJG9QKBgQDF+VUjR7RgAG6PEYIJhdpBOCPD7rFNuCkF1JZ46hSdNpKQox54Z5+tJnDLvT4xluqps2SkF9k9FllVE46ZEmQFCnZPpDgFfcKuEDSX+wfNNOkgT/HHFhbJpk48rOmGsKfCTRc0649iOMOoLqIGuyw6eGQ9e9tvS5CfbjceImYyCQKBgQCPz26VFUDj795f+oq5+uRt2abGo8POj46lzzVpBfRjEI9751y7Pi8jNpult/VF2zULPUKNURHcZXwIHqFx4VopLDwBgyDsaiJPBTOaOz8d9O0nIlSyNYeCFWix5yF1OwE4Fov/0Q5W9iBy2dvl07m07iYSFkP8o70wX+8afqO0sQKBgQCEIfal9my4CnHAAWJ2MqVKFEsisYQbKEgRASNxDmK1zz+hU425tQfIzDhKc0M4W87Bdt87+kLe17TF6KirF7A0ARiX7TYKzDYMcPp5WW2Kk77o9xKa2u5YpivfqVSvteYx87wCcRog51wHOyCfN3u8hq/4rVr2/EtJbYlSDomA6QKBgGssTWAl1IsQlhC9hy3yuScFfYJw/yeLw6mVk7m6NfMbRAMvMgw6WxqNUxZTiuZG9UPxcGaDqMRGVLd8MjWzVcotnsY61/2R/kt+X0RHNn2zy+ksS+wOMBxwxeL+LUgho68uZg4Wav21b/0veX/E4LViaeuptqVNk/sXvEvQ1A0G
+  # 支付宝公钥
+  alipay-public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlqoozLxd+XPMmliG4uRxs4lwPs6GbI5pZEt5/jy1LqCcMnIk5Y33mNDXGwYZc/MimY6z+TCxy3Zb5wU5dZlJ0dOdPRr9XyNJcVHbs3lPZfpFCqoZkTA3oeX2VM/OCmWwCofGbGFBugm9WiSH4dXGaGerAw8uWKn0m9ZaEB5o7RV5QDv9Dkx2hHk/p02mLnfptHKFE6DlBJepY2CdTbGL+WQf30r3ka7P6B57t5gBTPB8rE1quneT4pRhEFDFOyogtjww2ivMdbvxAKw2qyBgcAOmLm83o5rU/izgasXwC9GRkvSqu7I2ko0SZpFiVDYZ1p46UIQfJa4ZsEKz48sFMQIDAQAB
+  # 接口内容加密密钥
+  content-key: JoZ5lYQ29BxfVzQjLfw1Ig==
+  # 页面跳转同步通知页面路径
+  return-url: http://localhost:8080/#/success
+  # 服务器一步通知页面路径
+  notify-url: https://xiaojiejie.mynatapp.cc/alipay/trade/notify

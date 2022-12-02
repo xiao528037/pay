@@ -1,30 +1,24 @@
-package com.xiao.pay.paywechat.service.impl;
+package com.xiao.pay.payalibaba.service.impl;
 
+import com.alipay.api.AlipayClient;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.google.gson.Gson;
-import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
-import com.xiao.pay.paywechat.config.WxPayConfig;
-import com.xiao.pay.paywechat.dao.OrderInfoMapper;
-import com.xiao.pay.paywechat.dao.ProductMapper;
-import com.xiao.pay.paywechat.entity.OrderInfo;
-import com.xiao.pay.paywechat.entity.Product;
-import com.xiao.pay.paywechat.enums.OrderStatus;
-import com.xiao.pay.paywechat.enums.PayType;
-import com.xiao.pay.paywechat.service.OrderInfoService;
-import com.xiao.pay.paywechat.util.OrderNoUtils;
+import com.xiao.pay.payalibaba.dao.OrderInfoMapper;
+import com.xiao.pay.payalibaba.dao.ProductMapper;
+import com.xiao.pay.payalibaba.entity.OrderInfo;
+import com.xiao.pay.payalibaba.entity.Product;
+import com.xiao.pay.payalibaba.enums.OrderStatus;
+import com.xiao.pay.payalibaba.enums.PayType;
+import com.xiao.pay.payalibaba.service.OrderInfoService;
+
+import com.xiao.pay.payalibaba.util.OrderNoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author aloneMan
@@ -39,12 +33,12 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     private final ProductMapper productMapper;
     private final OrderInfoMapper orderInfoMapper;
 
-    private final WxPayConfig wxPayConfig;
+    private final AlipayClient alipayClient;
 
-    public OrderInfoServiceImpl(ProductMapper productMapper, OrderInfoMapper orderInfoMapper, WxPayConfig wxPayConfig) {
+    public OrderInfoServiceImpl(ProductMapper productMapper, OrderInfoMapper orderInfoMapper, AlipayClient alipayClient) {
         this.productMapper = productMapper;
         this.orderInfoMapper = orderInfoMapper;
-        this.wxPayConfig = wxPayConfig;
+        this.alipayClient = alipayClient;
     }
 
     @Override
@@ -62,10 +56,11 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         orderInfo.setTitle("购买" + product.getTitle());
         orderInfo.setOrderNo(OrderNoUtils.getOrderNo());
         orderInfo.setProductId(product.getId());
+        orderInfo.setPaymentType(PayType.ALIPAY.getType());
         //单位：分
         orderInfo.setTotalFee(product.getPrice());
+        //未支付
         orderInfo.setOrderStatus(OrderStatus.NOTPAY.getType());
-        orderInfo.setPaymentType(PayType.WXPAY.getType());
         int insert = orderInfoMapper.insert(orderInfo);
         Assert.isTrue(insert > 0, "添加订单信息失败");
         return orderInfo;
@@ -94,11 +89,17 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     }
 
     @Override
-    public List<OrderInfo> getNoPayOrderByDuration(int minutes) {
+    public List<OrderInfo> getNoPayOrderByDuration(int minutes, String paymentType) {
         Instant minus = Instant.now().minus(Duration.ofMinutes(minutes));
         QueryWrapper<OrderInfo> query = new QueryWrapper<>();
-        query.lambda().eq(OrderInfo::getOrderStatus, OrderStatus.NOTPAY.getType()).le(OrderInfo::getCreateTime, minus);
+        query.lambda()
+                .eq(OrderInfo::getOrderStatus, OrderStatus.NOTPAY.getType())
+                .eq(OrderInfo::getPaymentType, paymentType)
+                .le(OrderInfo::getCreateTime, minus);
         List<OrderInfo> orderInfos = orderInfoMapper.selectList(query);
+
         return orderInfos;
     }
+
+
 }
